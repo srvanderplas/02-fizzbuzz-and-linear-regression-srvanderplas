@@ -1,6 +1,6 @@
 ---
 title: "Homework: Introduction to Statistical Programming"
-author: "Firstname Lastname"
+author: "Susan Vanderplas"
 output: html_document
 ---
 
@@ -39,11 +39,45 @@ The "FizzBuzz Test" is a famous programming interview question.
 
 In the R chunk below, write code which will solve this problem. 
 
-```{r fizzbuzz-solution, echo = T}
+```{r fizzbuzz-solution1, echo = T}
 
 for (i in 1:30) {
   # FizzBuzz code goes here
-  
+  str <- "" # start with an empty string
+  if(i %% 3 == 0) {
+    # If i is divisible by 3, add Fizz to the string
+    str <- paste(str, "Fizz", sep = "")
+  }
+  if (i %% 5 == 0) {
+    # If i is divisible by 5, add Buzz to the string
+    str <- paste(str, "Buzz", sep = "")
+  }
+  if (str == "") {
+    # If str is still empty, then i is not divisible by 3 or 5
+    # so print the number itself
+    str <- as.character(i)
+  }
+  print(str)
+}
+
+
+```
+
+You can also use an if-else statement. 
+```{r fizzbuzz-solution2, echo = T}
+
+for (i in 1:30) {
+  # FizzBuzz code goes here
+  if(i %% 15 == 0) {        # Handle multiples of 3 and 5 (so 15) first
+    str <- "FizzBuzz"
+  } else if (i %% 5 == 0) { # Then, you know anything that isn't a multiple of
+    str <- "Buzz"           # 15 and is a multiple of 5 isn't divisible by 3
+  } else if (i %% 3 == 0) { # And so if something isn't divisible by 5, you 
+    str <- "Fizz"           # also need to check divisibility by 3
+  } else {
+    str <- as.character(i)  # Then, if none of those conditions hold, print the 
+  }                         # number
+  print(str)
 }
 
 
@@ -52,18 +86,31 @@ for (i in 1:30) {
 In the sas chunk, write similar code which will solve this problem.
 
 ```{sashtml fizzbuzz-sas, error = T}
-proc printto log="saslog.log" new;
-proc iml;
+PROC PRINTTO log="saslog.log" new;
+PROC IML;
 
 /* FizzBuzz code goes here */
-
-quit;
+z = '';
+DO i = 1 to 30;
+  a = '';
+  IF MOD(i, 5)=0 THEN DO;
+      a = cats(a,"Fizz");
+  END;
+  if MOD(i,3)=0 THEN DO;
+      a = cats(a,"Buzz");
+  END;
+  IF a = '' THEN DO;
+      a = cats(a, i);
+  END;
+  z = catx(' ', z, a);
+END;
+PRINT z;
+QUIT;
 ```
 
 ```{r readlog}
 cat(readLines("saslog.log"), sep="\n")
 ```
-
 
 ```{r cleanuplog}
 # Do not forget to remove the log file when you are done!
@@ -93,15 +140,21 @@ url <- "https://dasl.datadescription.com/download/data/3052"
 df <- read_tsv(url)                                  # Read in the data
 df <- na.omit(df[,c(1, 3, 4, 5, 6)])                 # Remove missing observations
 df <- df[df$`List Price` < 60,]                      # Remove extreme observations
-
-X <- df[,c("List Price", "Hard/ Paper", "NumPages")] # Get variables of interest
-names(X) <- c("List", "Hardcover", "Pages")          # Rename for simplicity
-X$Hardcover <- X$Hardcover == "H"                    # Convert character variable 
-                                                     # to binary quantity 
+df$Hardcover <- as.numeric(df$`Hard/ Paper` == "H")  # Make character into
+                                                     # binary quantity 
                                                      # (0 = paperback, 1 = hardcover)
+
+# Write data out for SAS
+write_csv(df[,c("Amazon Price", "List Price", "Hardcover", "NumPages")], 
+          path = "amazon_books.csv", na = ".")
+
+X <- df[,c("List Price", "Hardcover", "NumPages")]   # Get variables of interest
+names(X) <- c("List", "Hardcover", "Pages")          # Rename for simplicity
+                                                     
 X1 <- as.matrix(X)       # Convert to numerical matrix (not data frame)
 
 X <- cbind(Intercept = 1, X1) # Add an extra column of 1s for the intercept
+                              # This will only be used for the matrix mult
 Y <- df$`Amazon Price`
 
 # X and Y are now defined properly.
@@ -118,7 +171,7 @@ res <- rep(NA, 4)
 # Find the estimated coefficients for each of the explanatory variables using 
 # simple matrix operations
 # Store your answer in res: 
-# res <- .....
+res <- solve(t(X) %*% X) %*% t(X) %*% Y
 
 
 # ------------------------------------------------------------------------------
@@ -129,7 +182,31 @@ print(res)
 The regression equation is $\text{Amazon Price} = `r res[1]` + `r res[2]`(\text{List Price}) `r res[3]`(\text{is Hardcover})  `r res[4]`(\text{# Pages})$
 
 
-```{sas}
+In SAS, some preliminary googling led me to [this](https://blogs.sas.com/content/iml/2012/01/16/reading-all-variables-into-a-matrix.html) post, where I found instructions on how to read numeric variables into a matrix in PROC IML. 
 
+```{sas my-linear-regression-sas}
+PROC IMPORT datafile = "amazon_books.csv" out=books
+  DBMS = csv /* comma delimited file */
+  REPLACE;
+  GETNAMES = YES;
+  
+PROC REG data=books;
+    MODEL Amazon_Price = List_Price Hardcover NumPages;
+RUN;
+
+PROC IML;
+USE books;
+   read all var _NUM_ INTO X1[colname=varname]; /* Read numeric vars */
+CLOSE books;
+  
+Y = X1[,1]; /* Y pulled out */
+X1[,1] = 1; /* Intercept column */
+varname[1] = "Intercept";
+varname_t = varname`; /* Make them a column vector to match the fitted coefs */
+/* PRINT Y X1 varname_t;*/ /* Just checking */
+    
+res = inv(X1`*X1) * X1`*Y;
+PRINT varname_t res; /* Print coefs with labels */
+QUIT;
 
 ```
