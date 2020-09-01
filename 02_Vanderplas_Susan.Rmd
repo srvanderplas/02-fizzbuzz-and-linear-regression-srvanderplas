@@ -118,6 +118,29 @@ unlink("saslog.log")
 ```
 
 
+
+```{r fizzbuzz-sas2, engine="sashtml", engine.path=saspath, engine.opts=sasopts, error = T}
+PROC IML;
+
+/* FizzBuzz code goes here */
+z = '';
+DO i = 1 to 30;
+  a = '';
+  IF MOD(i, 5)=0 THEN DO;
+      a = cats(a,"Fizz");
+  END;
+  if MOD(i,3)=0 THEN DO;
+      a = cats(a,"Buzz");
+  END;
+  IF a = '' THEN DO;
+      a = cats(a, i);
+  END;
+  z = catx(' ', z, a);
+END;
+PRINT z;
+QUIT;
+```
+
 ## Linear Regression
 
 In linear regression, we have variables $\mathbf{Y}$ and $\mathbf{X}$ and want to find $\beta$ such that $\mathbf{Y} = \mathbf{X}\beta + \epsilon$. $\hat{\mathbf{b}}$, the best estimate of $\beta$, is typically obtained using the method of least squares, that is $\hat b = (\mathbf{X}^{T}\mathbf{X})^{-1}\mathbf{X}^T\mathbf{Y}$. Using this formula, fill in the chunks below to implement least squares regression from scratch. Store your results in the variable `res`.
@@ -211,3 +234,29 @@ QUIT;
 
 ```
 
+
+```{r my-linear-regression-sas2, engine="sashtml", engine.path=saspath, engine.opts=sasopts, error = T}
+PROC IMPORT datafile = "amazon_books.csv" out=books
+  DBMS = csv /* comma delimited file */
+  REPLACE;
+  GETNAMES = YES;
+  
+PROC REG data=books;
+    MODEL Amazon_Price = List_Price Hardcover NumPages;
+RUN;
+
+PROC IML;
+USE books;
+   read all var _NUM_ INTO X1[colname=varname]; /* Read numeric vars */
+CLOSE books;
+  
+Y = X1[,1]; /* Y pulled out */
+X1[,1] = 1; /* Intercept column */
+varname[1] = "Intercept";
+varname_t = varname`; /* Make them a column vector to match the fitted coefs */
+/* PRINT Y X1 varname_t;*/ /* Just checking */
+    
+res = inv(X1`*X1) * X1`*Y;
+PRINT varname_t res; /* Print coefs with labels */
+QUIT;
+```

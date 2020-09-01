@@ -438,9 +438,9 @@ summary {
   # FizzBuzz code goes here
   if(i %% 15 == 0) {        # Handle multiples of 3 and 5 (so 15) first
     str &lt;- &quot;FizzBuzz&quot;
-  } else if (i %% 5 == 0) { # Then, you know anything that isn&#39;t a multiple of
-    str &lt;- &quot;Buzz&quot;           # 15 and is a multiple of 5 isn&#39;t divisible by 3
-  } else if (i %% 3 == 0) { # And so if something isn&#39;t divisible by 5, you 
+  } else if (i %% 5 == 0) { # Then, you know anything that isn't a multiple of
+    str &lt;- &quot;Buzz&quot;           # 15 and is a multiple of 5 isn't divisible by 3
+  } else if (i %% 3 == 0) { # And so if something isn't divisible by 5, you 
     str &lt;- &quot;Fizz&quot;           # also need to check divisibility by 3
   } else {
     str &lt;- as.character(i)  # Then, if none of those conditions hold, print the 
@@ -482,19 +482,19 @@ summary {
 PROC IML;
 
 /* FizzBuzz code goes here */
-z = &#39;&#39;;
+z = '';
 DO i = 1 to 30;
-  a = &#39;&#39;;
+  a = '';
   IF MOD(i, 5)=0 THEN DO;
       a = cats(a,&quot;Fizz&quot;);
   END;
   if MOD(i,3)=0 THEN DO;
       a = cats(a,&quot;Buzz&quot;);
   END;
-  IF a = &#39;&#39; THEN DO;
+  IF a = '' THEN DO;
       a = cats(a, i);
   END;
-  z = catx(&#39; &#39;, z, a);
+  z = catx(' ', z, a);
 END;
 PRINT z;
 QUIT;</code></pre>
@@ -550,19 +550,19 @@ ROW1
 NOTE: IML Ready
 8          
 9          /* FizzBuzz code goes here */
-10         z = &#39;&#39;;
+10         z = '';
 11         DO i = 1 to 30;
-12           a = &#39;&#39;;
+12           a = '';
 13           IF MOD(i, 5)=0 THEN DO;
 14               a = cats(a,&quot;Fizz&quot;);
 15           END;
 16           if MOD(i,3)=0 THEN DO;
 17               a = cats(a,&quot;Buzz&quot;);
 18           END;
-19           IF a = &#39;&#39; THEN DO;
+19           IF a = '' THEN DO;
 20               a = cats(a, i);
 21           END;
-22           z = catx(&#39; &#39;, z, a);
+22           z = catx(' ', z, a);
 23         END;
 24         PRINT z;
 25         QUIT;
@@ -573,6 +573,68 @@ NOTE: PROCEDURE IML used (Total process time):
       </code></pre>
 <pre class="r"><code># Do not forget to remove the log file when you are done!
 unlink(&quot;saslog.log&quot;)</code></pre>
+<pre class="sashtml"><code>PROC IML;
+
+/* FizzBuzz code goes here */
+z = '';
+DO i = 1 to 30;
+  a = '';
+  IF MOD(i, 5)=0 THEN DO;
+      a = cats(a,&quot;Fizz&quot;);
+  END;
+  if MOD(i,3)=0 THEN DO;
+      a = cats(a,&quot;Buzz&quot;);
+  END;
+  IF a = '' THEN DO;
+      a = cats(a, i);
+  END;
+  z = catx(' ', z, a);
+END;
+PRINT z;
+QUIT;
+</code></pre>
+<div class="branch">
+<a name="IDX"></a>
+<div>
+<div align="center">
+<!--BEGINTABLE-->
+<table class="table" cellspacing="0" cellpadding="7" rules="groups" frame="hsides" summary="Procedure IML: z">
+<colgroup>
+<col>
+</colgroup>
+<colgroup>
+<col>
+</colgroup>
+<thead>
+<tr>
+<th class="c b header" colspan="2" scope="colgroup">
+z
+</th>
+</tr>
+<tr>
+<th class="c headerempty" scope="col">
+</th>
+<th class="l b header" scope="col">
+COL1
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th class="l rowheader" scope="row">
+ROW1
+</th>
+<td class="l data">
+1 2 Buzz 4 Fizz Buzz 7 8 Buzz Fizz 11 Buzz 13 14 FizzBuzz 16 17 Buzz 19 Fizz Buzz 22 23 Buzz Fizz 26 Buzz 28 29 FizzBuzz
+</td>
+</tr>
+</tbody>
+</table>
+<!--ENDTABLE-->
+</div>
+</div>
+<br>
+</div>
 </div>
 <div id="linear-regression" class="section level2">
 <h2>Linear Regression</h2>
@@ -611,7 +673,7 @@ Y &lt;- df$`Amazon Price`
 
 # X and Y are now defined properly.
 
-# Compare your results to lm&#39;s results
+# Compare your results to lm's results
 lm(Y ~ X1)$coefficients</code></pre>
 <pre><code>(Intercept)      X1List X1Hardcover     X1Pages 
     1.39044     0.69959    -1.31281    -0.00392 </code></pre>
