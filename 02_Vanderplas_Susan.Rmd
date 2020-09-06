@@ -40,7 +40,7 @@ The "FizzBuzz Test" is a famous programming interview question.
 In the R chunk below, write code which will solve this problem. 
 
 ```{r fizzbuzz-solution1, echo = T}
-
+# This solution uses string concatenation - it does not require if/else statements
 for (i in 1:30) {
   # FizzBuzz code goes here
   str <- "" # start with an empty string
@@ -65,7 +65,7 @@ for (i in 1:30) {
 
 You can also use an if-else statement. 
 ```{r fizzbuzz-solution2, echo = T}
-
+# This solution uses if/else statements
 for (i in 1:30) {
   # FizzBuzz code goes here
   if(i %% 15 == 0) {        # Handle multiples of 3 and 5 (so 15) first
@@ -86,9 +86,8 @@ for (i in 1:30) {
 In the sas chunk, write similar code which will solve this problem.
 
 ```{sashtml fizzbuzz-sas, error = T}
-PROC PRINTTO log="saslog.log" new;
+/* This solution uses string concatenation */
 PROC IML;
-
 /* FizzBuzz code goes here */
 z = '';
 DO i = 1 to 30;
@@ -107,39 +106,79 @@ END;
 PRINT z;
 QUIT;
 ```
-
-```{r readlog}
-cat(readLines("saslog.log"), sep="\n")
-```
-
-```{r cleanuplog}
-# Do not forget to remove the log file when you are done!
-unlink("saslog.log")
-```
-
 
 
 ```{r fizzbuzz-sas2, engine="sashtml", engine.path=saspath, engine.opts=sasopts, error = T}
+/* This solution uses a different invocation of SASmarkdown - both work on my machine */
+/* Here, Ive used string concatenation, but stored everything in column vectors */
+/* The results are much neater when printed out */
 PROC IML;
 
 /* FizzBuzz code goes here */
-z = '';
-DO i = 1 to 30;
-  a = '';
-  IF MOD(i, 5)=0 THEN DO;
-      a = cats(a,"Fizz");
+  
+  fbres = J(30,1,"         "); /* J(nrow, ncol, value) creates a constant matrix */
+  fbnum = t(1:30); /* a:b creates a row vector, so we need transpose to get a col vector */
+
+  DO i = 1 TO 30;
+    x = ''; /* start with an empty string var */
+    
+    /* the cats(a, b) function concatenates strings, so cats('a', 'b') is 'ab' */
+    IF mod(i, 3) = 0 THEN DO; 
+      x = cats(x, "FIZZ"); 
+    END;
+    IF mod(i, 5) = 0 THEN DO;
+      x = cats(x, "BUZZ"); 
+    END;
+    
+    /* if x is still empty, put a number in it */
+    IF x = '' THEN DO;
+      x = cats(x, i); 
+    END;
+    /* store the completed x in a[i] */
+    fbres[i] = x; 
   END;
-  if MOD(i,3)=0 THEN DO;
-      a = cats(a,"Buzz");
-  END;
-  IF a = '' THEN DO;
-      a = cats(a, i);
-  END;
-  z = catx(' ', z, a);
-END;
-PRINT z;
+  PRINT fbnum fbres;
+
 QUIT;
 ```
+
+```{r fizzbuzz-sas3, engine="sashtmllog", engine.path=saspath, engine.opts=sasopts, error = T}
+/* This solution uses if-else statements and prints the results out one-by-one */
+/* I have used engine='sashtmllog' in the code chunk so that the log file prints out */
+PROC IML;
+DO x = 1 TO 30;
+	IF mod(x,3) = 0 & mod(x,5) = 0 THEN PRINT 'fizzbuzz';
+	ELSE IF mod(x,3) = 0 THEN PRINT 'fizz';
+  ELSE IF mod(x,5) = 0 THEN PRINT 'buzz';
+	ELSE print x;
+END;
+QUIT;
+```
+
+
+```{r fizzbuzz-sas4, engine="sashtml", engine.path=saspath, engine.opts=sasopts, error = T}
+/* This solution uses if-else statements and prints the results out as a vector */
+PROC IML;
+  
+  fbres = J(30,1,"         "); /* J(nrow, ncol, value) creates a constant matrix */
+  fbnum = t(1:30); /* a:b creates a row vector, so we need transpose to get a col vector */
+
+  DO i = 1 TO 30;
+    x = '        '; /* start with a string of length 8 (so that there's enough memory) */
+    
+    /* the cats(a, b) function concatenates strings, so cats('a', 'b') is 'ab' */
+    IF mod(i, 15) = 0 THEN x = "FIZZBUZZ"; 
+    ELSE IF mod(i, 5) = 0 THEN x = "BUZZ";
+    ELSE IF mod(i, 3) = 0 THEN x = "FIZZ";
+    ELSE x = cats(x, i); /* must convert i to a string using cats */
+  
+    fbres[i] = x; 
+  END;
+  PRINT fbnum fbres;
+
+QUIT;
+```
+
 
 ## Linear Regression
 
@@ -207,34 +246,6 @@ The regression equation is $\text{Amazon Price} = `r res[1]` + `r res[2]`(\text{
 
 In SAS, some preliminary googling led me to [this](https://blogs.sas.com/content/iml/2012/01/16/reading-all-variables-into-a-matrix.html) post, where I found instructions on how to read numeric variables into a matrix in PROC IML. 
 
-```{sas my-linear-regression-sas}
-PROC IMPORT datafile = "amazon_books.csv" out=books
-  DBMS = csv /* comma delimited file */
-  REPLACE;
-  GETNAMES = YES;
-  
-PROC REG data=books;
-    MODEL Amazon_Price = List_Price Hardcover NumPages;
-RUN;
-
-PROC IML;
-USE books;
-   read all var _NUM_ INTO X1[colname=varname]; /* Read numeric vars */
-CLOSE books;
-  
-Y = X1[,1]; /* Y pulled out */
-X1[,1] = 1; /* Intercept column */
-varname[1] = "Intercept";
-varname_t = varname`; /* Make them a column vector to match the fitted coefs */
-/* PRINT Y X1 varname_t;*/ /* Just checking */
-    
-res = inv(X1`*X1) * X1`*Y;
-PRINT varname_t res; /* Print coefs with labels */
-QUIT;
-
-```
-
-
 ```{r my-linear-regression-sas2, engine="sashtml", engine.path=saspath, engine.opts=sasopts, error = T}
 PROC IMPORT datafile = "amazon_books.csv" out=books
   DBMS = csv /* comma delimited file */
@@ -255,8 +266,11 @@ X1[,1] = 1; /* Intercept column */
 varname[1] = "Intercept";
 varname_t = varname`; /* Make them a column vector to match the fitted coefs */
 /* PRINT Y X1 varname_t;*/ /* Just checking */
-    
-res = inv(X1`*X1) * X1`*Y;
+
+xt = X1`;
+xtxinv = inv(xt * X1);
+xty = xt * Y;
+res = xtxinv * xty;
 PRINT varname_t res; /* Print coefs with labels */
 QUIT;
 ```
